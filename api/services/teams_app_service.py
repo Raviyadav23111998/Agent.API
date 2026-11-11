@@ -28,9 +28,9 @@ from typing import Optional, Tuple
 logger = logging.getLogger(__name__)
 
 WEBHOOK_BASE = os.environ.get(
-    "AG_TEAMS_WEBHOOK_BASE", "https://api.storeglance.com/api/agent/webhook/teams"
+    "AG_TEAMS_WEBHOOK_BASE", "https://ai.storeglance.com/api/webhook/teams"
 )
-GATEWAY_API = os.environ.get("AG_PUBLIC_API_BASE", "https://api.storeglance.com")
+GATEWAY_API = os.environ.get("AG_PUBLIC_API_BASE", "https://ai.storeglance.com")
 DEFAULT_ACCENT = "#6D28D9"
 
 _MANIFEST_NS = uuid.UUID("6d6f6e74-7465-616d-7300-000000000001")
@@ -92,7 +92,7 @@ def build_manifest(*, tenant_domain: str, display_name: str,
             "supportsFiles": True,
         }],
         "permissions": ["identity", "messageTeamMembers"],
-        "validDomains": sorted({"api.storeglance.com", tenant_domain, "*.storeglanceai.com"}),
+        "validDomains": sorted({"ai.storeglance.com", tenant_domain, "*.storeglanceai.com"}),
         "webApplicationInfo": {
             "id": client_id,
             "resource": f"api://{GATEWAY_API.split('://')[-1]}/{client_id}",

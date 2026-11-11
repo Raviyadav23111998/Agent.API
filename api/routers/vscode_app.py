@@ -30,10 +30,10 @@ def _api_url(request: Request) -> str:
     host = (request.headers.get("x-forwarded-host")
             or request.headers.get("host") or "").split(":")[0].lower()
     if host.startswith("uat-") or ".uat" in host or host.startswith("uat"):
-        return "https://uat-api.storeglance.com/api/agent"
+        return "https://uat-ai.storeglance.com/api"
     if host.startswith("sit-") or ".sit" in host or host.startswith("sit"):
-        return "https://sit-api.storeglance.com/api/agent"
-    return "https://api.storeglance.com/api/agent"
+        return "https://sit-ai.storeglance.com/api"
+    return "https://ai.storeglance.com/api"
 
 
 @router.get("/status")

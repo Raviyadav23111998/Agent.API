@@ -127,8 +127,8 @@ class JWTConfig:
     """JWT configuration loaded from ag_system.configs at startup."""
     public_key: str = ""
     private_key: str = ""
-    issuer: str = "Storeglance.MSystem"
-    audience: str = "Storeglance.SolutionsKraft"
+    issuer: str = "Storeglance.Agent"
+    audience: str = "Storeglance.Agent.Clients"
     token_expiry_minutes: int = 1440
     refresh_expiry_days: int = 7
 
@@ -142,8 +142,8 @@ def load_jwt_config():
 
     jwt_config.public_key = app_config.get_global("secret.public_key", "")
     jwt_config.private_key = app_config.get_global("secret.private_key", "")
-    jwt_config.issuer = app_config.get_global("secret.issuer", "Storeglance.MSystem")
-    jwt_config.audience = app_config.get_global("secret.audience", "Storeglance.SolutionsKraft")
+    jwt_config.issuer = app_config.get_global("secret.issuer", "Storeglance.Agent")
+    jwt_config.audience = app_config.get_global("secret.audience", "Storeglance.Agent.Clients")
     jwt_config.token_expiry_minutes = int(app_config.get_global("secret.token_expiry_minutes", "1440") or 1440)
     jwt_config.refresh_expiry_days = int(app_config.get_global("secret.refresh_token_expiry_days", "7") or 7)
 

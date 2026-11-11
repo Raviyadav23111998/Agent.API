@@ -150,8 +150,8 @@ def _():
     p = pyjwt.decode(tok, options={'verify_signature': False})
     for claim in ['user_ID', 'user_code', 'email_ID', 'role', 'session_ID', 'tenant_id']:
         assert claim in p, f'Missing claim: {claim}'
-    assert p['iss'] == 'Storeglance.MSystem'
-    assert p['aud'] == 'Storeglance.SolutionsKraft'
+    assert p['iss'] == 'Storeglance.Agent'
+    assert p['aud'] == 'Storeglance.Agent.Clients'
 
 @test(14, 'RSA verify (shared with SMSystems/Fleet)')
 def _():
@@ -160,7 +160,7 @@ def _():
     from api.middleware.auth import verify_jwt_token
     tok = tokens.get('mm_at2', tokens['mm_at'])
     v = verify_jwt_token(tok, app_config.get('secret.public_key'),
-                         'Storeglance.MSystem', 'Storeglance.SolutionsKraft')
+                         'Storeglance.Agent', 'Storeglance.Agent.Clients')
     assert v['user_code'] == 'demo'
     app_config.close()
 

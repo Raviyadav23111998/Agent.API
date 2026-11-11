@@ -1,0 +1,18 @@
+# Schema for a fresh Storeglance Agent database, applied in order by provision.sh.
+# The bootstrap is the full ag_* schema at V034 plus the platform seed; the
+# V0xx files after it are the generic forward migrations. Product-specific data
+# migrations for other products (PrepCrest / FluentPeak / Current Affairs:
+# V041, V042, V045-V047, V049-V051, V053-V055, V059-V061, V063, V064) contain
+# no schema changes and are intentionally NOT applied here.
+bootstrap/agent_bootstrap.sql
+V035_llm_profiles_usage_budgets.sql
+V036_skills_learning.sql
+V037_cron_persona.sql
+V038_persona_scope_policy.sql
+V039_files_attachments.sql
+V040_service_api_keys.sql
+V043_memory_app_scope.sql
+V044_skill_scope_by_capability.sql
+V048_personas_do_not_advertise_denied_tools.sql
+V058_service_key_llm_credential.sql
+V062_deepseek_peak_config.sql

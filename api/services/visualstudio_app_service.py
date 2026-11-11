@@ -35,7 +35,7 @@ MARKETPLACE_URL = os.environ.get(
 
 _CANDIDATE_DIRS = [
     VSIX_DIR,
-    "/var/www/agent/visualstudio",
+    "/var/lib/storeglance-agent/vsix/visualstudio",
     str(Path(__file__).resolve().parents[3] / "agent.vs-extension"),
 ]
 

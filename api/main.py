@@ -44,14 +44,17 @@ async def lifespan(app: FastAPI):
     control_db = TenantDB()
     control_db.connect()
 
-    from core.msystem_router import MSystemRouter
+    from core.msystem_router import MSystemRouter, msystem_configured
     from core.tenant_resolver import TenantConnectionResolver
     from core.tenant_context import multi_tenant_enabled
-    try:
-        app.state.msystem_router = MSystemRouter()
-    except Exception as e:
-        app.state.msystem_router = None
-        logger.info("  MSystem: router unavailable (%s)", e)
+    app.state.msystem_router = None
+    if not msystem_configured():
+        logger.info("  MSystem: not configured — standalone mode")
+    else:
+        try:
+            app.state.msystem_router = MSystemRouter()
+        except Exception as e:
+            logger.info("  MSystem: router unavailable (%s)", e)
     app.state.tenant_resolver = TenantConnectionResolver(
         msystem_router=app.state.msystem_router)
     from core.tenant_resolver import set_global_resolver
@@ -70,7 +73,7 @@ async def lifespan(app: FastAPI):
 
     from api.middleware.auth import load_jwt_config
     load_jwt_config()
-    logger.info("  JWT: RSA keys loaded (shared with SMSystems)")
+    logger.info("  JWT: RSA keys loaded")
 
     from api.repositories.user_repo import AuthRepository
     from api.services.auth_service import AuthService

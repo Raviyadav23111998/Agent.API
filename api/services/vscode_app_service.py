@@ -33,7 +33,7 @@ MARKETPLACE_URL = os.environ.get(
 
 _CANDIDATE_DIRS = [
     VSIX_DIR,
-    "/var/www/agent/vscode",
+    "/var/lib/storeglance-agent/vsix/vscode",
     str(Path(__file__).resolve().parents[3] / "agent.vscode-extension"),
 ]
 

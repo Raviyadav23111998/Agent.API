@@ -423,12 +423,15 @@ class GatewayRunner:
         control_db.connect()
         self._control_db = control_db
 
-        try:
-            from core.msystem_router import MSystemRouter
-            self._msystem_router = MSystemRouter()
-        except Exception as e:
-            self._msystem_router = None
-            logger.warning("[Gateway] MSystem router unavailable: %s", e)
+        from core.msystem_router import MSystemRouter, msystem_configured
+        self._msystem_router = None
+        if not msystem_configured():
+            logger.info("[Gateway] MSystem not configured — standalone mode")
+        else:
+            try:
+                self._msystem_router = MSystemRouter()
+            except Exception as e:
+                logger.warning("[Gateway] MSystem router unavailable: %s", e)
         from core.tenant_resolver import TenantConnectionResolver, set_global_resolver
         self._tenant_resolver = TenantConnectionResolver(msystem_router=self._msystem_router)
         set_global_resolver(self._tenant_resolver)

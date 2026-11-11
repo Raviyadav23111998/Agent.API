@@ -1,0 +1,39 @@
+[Unit]
+# Storeglance Agent API — UAT.
+# Installed by deploy/setup-server.sh; code is shipped by deploy/deploy.sh (CI).
+# Standalone: no MSystem. Everything it needs is in the EnvironmentFile and the
+# agent's own database.
+Description=Storeglance Agent API (UAT)
+After=network.target postgresql.service docker.service
+Wants=postgresql.service
+
+[Service]
+User=sgagent
+Group=sgagent
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/www/uat-ai.storeglance.com/api /var/lib/storeglance-agent/uat
+
+LimitNOFILE=65536
+EnvironmentFile=/etc/storeglance/uat/agent/.env
+Environment=PYTHONPATH=/var/www/uat-ai.storeglance.com/api:/var/www/uat-ai.storeglance.com/api/core
+Environment=PYTHONUNBUFFERED=1
+Environment=HOME=/var/lib/storeglance-agent/uat
+Environment=PGAPPNAME=storeglance-agent-api-uat
+WorkingDirectory=/var/www/uat-ai.storeglance.com/api
+ExecStart=/var/www/uat-ai.storeglance.com/venv/bin/python -m uvicorn api.main:app --host 127.0.0.1 --port 8131
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+KillSignal=SIGINT
+SyslogIdentifier=uat-storeglance-agent-api
+
+[Install]
+WantedBy=multi-user.target

@@ -1,23 +1,38 @@
 name: Build & Deploy
 
+# main → ai.storeglance.com (prod), uat → uat-ai.storeglance.com (uat).
+# Ships Agent.API with Agent.Core under core/ and runs deploy/deploy.sh on the
+# server, which installs requirements into the environment's venv, swaps the
+# tree in, restarts both services and rolls back if /health fails.
+#
+# Repository secrets:
+#   DEPLOY_HOST      server hostname / IP
+#   SSH_DEPLOY_KEY   private key authorised for root on DEPLOY_HOST
+#   SSH_KNOWN_HOSTS  output of `ssh-keyscan -t ed25519 <DEPLOY_HOST>`
+#
+# GitHub-hosted runners only: this repository is public, and a self-hosted
+# runner would execute pull-request code from forks on the server.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   push:
-    branches: [ "main", "uat", "sit" ]
+    branches: [ "main", "uat" ]
   pull_request:
-    branches: [ "main", "uat", "sit" ]
+    branches: [ "main", "uat" ]
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to deploy'
-        required: false
-        default: 'main'
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   build-and-deploy:
-    name: Python Deploy
-    runs-on: self-hosted
-    env:
-      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+    name: Python Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -25,67 +40,58 @@ jobs:
       - name: Checkout Agent.Core
         uses: actions/checkout@v4
         with:
-          repository: Raviyadav23111998/Agent.Core
-          token: ${{ secrets.PAT_TOKEN }}
-          ref: ${{ github.ref_name }}
+          repository: ${{ github.repository_owner }}/Agent.Core
+          ref: ${{ github.event_name == 'pull_request' && github.base_ref || github.ref_name }}
           path: core
 
-      - name: Deploy to Production
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+      - name: Resolve environment
+        id: env
         run: |
-          rsync -az --delete \
-            --exclude '__pycache__' \
-            --exclude '.git' \
-            --exclude '.env' \
-            --exclude 'core/' \
-            ./ root@${DEPLOY_HOST}:/var/www/ai.storeglance.com/api/
-          rsync -az --delete \
-            --exclude '__pycache__' \
-            --exclude '.git' \
-            --exclude '.ag_data' \
-            --exclude '*.db' \
-            --exclude '*.db-wal' \
-            --exclude '*.db-shm' \
-            ./core/ root@${DEPLOY_HOST}:/var/www/ai.storeglance.com/api/core/
-          ssh root@${DEPLOY_HOST} "systemctl restart agent-api.service && systemctl restart agent-gateway.service"
-          echo "✅ Deployed to PRODUCTION (ai.storeglance.com)"
+          case "${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}" in
+            main) echo "name=prod" >> "$GITHUB_OUTPUT" ;;
+            *)    echo "name=uat"  >> "$GITHUB_OUTPUT" ;;
+          esac
 
-      - name: Deploy to UAT
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/uat'
-        run: |
-          rsync -az --delete \
-            --exclude '__pycache__' \
-            --exclude '.git' \
-            --exclude '.env' \
-            --exclude 'core/' \
-            ./ root@${DEPLOY_HOST}:/var/www/uat-ai.storeglance.com/api/
-          rsync -az --delete \
-            --exclude '__pycache__' \
-            --exclude '.git' \
-            --exclude '.ag_data' \
-            --exclude '*.db' \
-            --exclude '*.db-wal' \
-            --exclude '*.db-shm' \
-            ./core/ root@${DEPLOY_HOST}:/var/www/uat-ai.storeglance.com/api/core/
-          ssh root@${DEPLOY_HOST} "systemctl restart uat-agent-api.service && systemctl restart uat-agent-gateway.service"
-          echo "✅ Deployed to UAT (uat-ai.storeglance.com)"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
 
-      - name: Deploy to SIT
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/sit'
+      - name: Compile check
+        run: python -m compileall -q api gateway main.py core/core core/brain core/client core/tools core/agents
+
+      - name: Package
+        if: github.event_name != 'pull_request'
         run: |
-          rsync -az --delete \
-            --exclude '__pycache__' \
-            --exclude '.git' \
-            --exclude '.env' \
-            --exclude 'core/' \
-            ./ root@${DEPLOY_HOST}:/var/www/sit-ai.storeglance.com/api/
-          rsync -az --delete \
-            --exclude '__pycache__' \
-            --exclude '.git' \
-            --exclude '.ag_data' \
-            --exclude '*.db' \
-            --exclude '*.db-wal' \
-            --exclude '*.db-shm' \
-            ./core/ root@${DEPLOY_HOST}:/var/www/sit-ai.storeglance.com/api/core/
-          ssh root@${DEPLOY_HOST} "systemctl restart sit-agent-api.service && systemctl restart sit-agent-gateway.service"
-          echo "✅ Deployed to SIT (sit-ai.storeglance.com)"
+          rm -rf core/.git
+          tar --exclude='.git' --exclude='.github' --exclude='__pycache__' -czf "$RUNNER_TEMP/agent-api.tar.gz" .
+          tar -czf "$RUNNER_TEMP/kit.tar.gz" deploy migrations
+
+      - name: SSH
+        if: github.event_name != 'pull_request'
+        env:
+          KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+          KNOWN: ${{ secrets.SSH_KNOWN_HOSTS }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          d="$RUNNER_TEMP/ssh"; mkdir -p "$d" && chmod 700 "$d"
+          printf '%s\n' "$KEY"   > "$d/key";  chmod 600 "$d/key"
+          printf '%s\n' "$KNOWN" > "$d/known_hosts"
+          echo "SSH_DIR=$d" >> "$GITHUB_ENV"
+          echo "SERVER=root@$HOST" >> "$GITHUB_ENV"
+          echo "SSH_OPTS=-i $d/key -o IdentitiesOnly=yes -o UserKnownHostsFile=$d/known_hosts -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        if: github.event_name != 'pull_request'
+        env:
+          ENV_NAME: ${{ steps.env.outputs.name }}
+        run: |
+          scp $SSH_OPTS "$RUNNER_TEMP/agent-api.tar.gz" "$RUNNER_TEMP/kit.tar.gz" "$SERVER:/tmp/"
+          ssh $SSH_OPTS "$SERVER" "set -e
+            rm -rf /opt/storeglance-agent/src && mkdir -p /opt/storeglance-agent/src
+            tar -xzf /tmp/kit.tar.gz -C /opt/storeglance-agent/src
+            chmod 755 /opt/storeglance-agent/src/deploy/*.sh /opt/storeglance-agent/src/deploy/db/*.sh
+            /opt/storeglance-agent/src/deploy/deploy.sh $ENV_NAME /tmp/agent-api.tar.gz"
+
+      - name: Remove SSH key
+        if: always()
+        run: '[ -n "${SSH_DIR:-}" ] && rm -rf "$SSH_DIR" || true'
