@@ -41,6 +41,35 @@ async def get_llm_config(
     )
 
 @router.put("/v1/admin/llm-config")
+def _sync_config_default_profile(request: Request) -> None:
+    """Keep the config-mirroring default profile in step with this page.
+
+    Profiles whose api_key is the '__config:llm.api_key__' sentinel are the
+    "use the global LLM config" profile; applications bound to it must follow
+    what an admin saves here. Without this, provider/base_url/model edits were
+    ignored while the key was picked up — e.g. a DeepSeek key sent to OpenRouter.
+    Best-effort: a failure here must not fail the save."""
+    try:
+        provider = app_config.get("llm.provider")
+        base_url = app_config.get("llm.base_url")
+        model = app_config.get("llm.model")
+        if not (provider and base_url and model):
+            return
+        db = getattr(request.app.state, "db", None)
+        if db is None:
+            return
+        db.execute(
+            """UPDATE ag_system.llm_profiles
+                  SET provider = %s, base_url = %s, model = %s, updated_at = now()
+                WHERE api_key = '__config:llm.api_key__'
+                  AND (provider, base_url, model) IS DISTINCT FROM (%s, %s, %s)""",
+            (provider, base_url, model, provider, base_url, model))
+        from client.cli import invalidate_profile_clients
+        invalidate_profile_clients()
+    except Exception as e:
+        logger.warning("llm_config.default_profile_sync_failed: %s", e)
+
+
 async def update_llm_config(
     body: LLMConfigUpdateRequest,
     request: Request,
@@ -51,7 +80,13 @@ async def update_llm_config(
         raise HTTPException(status_code=403, detail="Admin access required")
     
     updates = 0
-    
+    # Pasted values often carry a stray space/newline; a key with one is
+    # rejected by the provider as "invalid", which is hard to spot in the UI.
+    for f in ("provider", "model", "base_url", "api_key", "provider_order"):
+        v = getattr(body, f, None)
+        if isinstance(v, str):
+            setattr(body, f, v.strip())
+
     if body.provider is not None:
         app_config.set("llm.provider", body.provider, is_secret=False)
         updates += 1
@@ -74,6 +109,7 @@ async def update_llm_config(
         app_config.set("llm.temperature", body.temperature, is_secret=False)
         updates += 1
         
+    _sync_config_default_profile(request)
     logger.info(f"LLM Configuration updated by admin user {current_user.get('user_ID')}. Live-reloaded {updates} keys.")
     return {"message": f"Successfully updated {updates} LLM settings and hot-reloaded the system cache."}
 

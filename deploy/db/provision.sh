@@ -58,7 +58,9 @@ psql_app() { PGPASSWORD="$DBPW" psql -X -q -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$
 # ── 2. schema (only on an empty database) ─────────────────────────────────
 if [ "$(psql_app -Atc "select to_regclass('ag_system.configs') is not null")" = t ]; then
     echo "schema    present — not re-applied (apply new V0xx files by hand)"
+    FRESH=0
 else
+    FRESH=1
     grep -vE '^\s*(#|$)' "$HERE/migrations.list" | while read -r f; do
         t0=$(date +%s%3N)
         psql_app -f "$MIG/$f" >/dev/null
@@ -83,6 +85,20 @@ SQL
 fi
 
 # ── 3. platform config (own DB is the control plane) ──────────────────────
+# Media paths always; the LLM defaults only on a fresh database — after that the
+# admin UI owns them and a re-run must never overwrite what was saved there.
+psql_app >/dev/null <<SQL
+INSERT INTO ag_system.configs (config_key, config_value, is_secret, is_active) VALUES
+  ('media.base_path',        '$STATE/media/', false, true),
+  ('media.image_base_path',  '$STATE/media/', false, true),
+  ('media.doc_base_path',    '$STATE/media/Document/', false, true),
+  ('media.audio_base_path',  '$STATE/media/Audio/', false, true),
+  ('media.video_base_path',  '$STATE/media/Video/', false, true)
+ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value, is_active = true;
+-- Infra comes from the environment file; stale DB rows would shadow it.
+DELETE FROM ag_system.configs WHERE config_key ~ '^(neo4j|elasticsearch|redis|db)\.';
+SQL
+if [ "$FRESH" = 1 ]; then
 psql_app >/dev/null <<SQL
 INSERT INTO ag_system.configs (config_key, config_value, is_secret, is_active) VALUES
   ('llm.provider',           'openrouter', false, true),
@@ -90,15 +106,8 @@ INSERT INTO ag_system.configs (config_key, config_value, is_secret, is_active) V
   ('llm.model',              'deepseek/deepseek-v4-flash', false, true),
   ('llm.fallback_model',     'deepseek/deepseek-v4-flash', false, true),
   ('llm.provider_order',     'DeepInfra', false, true),
-  ('llm.embedding_base_url', 'http://localhost:11434/v1', false, true),
-  ('media.base_path',        '$STATE/media/', false, true),
-  ('media.image_base_path',  '$STATE/media/', false, true),
-  ('media.doc_base_path',    '$STATE/media/Document/', false, true),
-  ('media.audio_base_path',  '$STATE/media/Audio/', false, true),
-  ('media.video_base_path',  '$STATE/media/Video/', false, true)
+  ('llm.embedding_base_url', 'http://localhost:11434/v1', false, true)
 ON CONFLICT (config_key) DO UPDATE SET config_value = EXCLUDED.config_value, is_active = true;
--- Infra and secrets come from the environment file; stale DB rows would shadow it.
-DELETE FROM ag_system.configs WHERE config_key ~ '^(neo4j|elasticsearch|redis|db)\.' OR config_key = 'llm.api_key';
 UPDATE ag_system.llm_profiles
    SET provider = 'openrouter',
        base_url = 'https://openrouter.ai/api/v1/chat/completions',
@@ -109,7 +118,9 @@ UPDATE ag_system.llm_profiles
        api_key  = '__config:llm.api_key__'
  WHERE provider = 'deepseek';
 SQL
-echo "config    LLM via OpenRouter, media under $STATE/media"
+echo "config    LLM defaults seeded (OpenRouter) — change them in the admin UI"
+fi
+echo "config    media under $STATE/media"
 
 # ── 4. secrets / environment file ─────────────────────────────────────────
 # shellcheck disable=SC1091
