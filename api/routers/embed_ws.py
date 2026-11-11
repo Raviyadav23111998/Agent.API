@@ -209,8 +209,13 @@ async def _handle_embed_chat(websocket: WebSocket, data: dict, claims: dict):
             "integration_id": integration_id,
             "guardrail_policy": claims.get("guardrail_policy") or {},
             "end_user": conv_id,
+            "site": claims.get("origin") or "",
         },
     )
+
+    # Execute only what this session was offered (sandboxed registry), never
+    # the full server registry the executor was constructed with.
+    remote.restrict_to(getattr(session.agent, "tool_registry", None))
 
     def _frame(event: str, **kw):
         return {"type": "event", "event": event, **kw}

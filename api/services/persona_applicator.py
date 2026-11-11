@@ -177,6 +177,19 @@ def apply_persona(cli, db, *, base_registry, user_ctx, app_id,
             base_registry, embed.get("mode", "chat"),
             (persona or {}).get("allowed_tools"),
             dynamic_embed_safe=dynamic_embed_safe)
+        # Opt-in, create-only issue reporting (see core/embed_issue_intake.py).
+        # Added to the scoped registry, never the full Jira toolset.
+        try:
+            from core.embed_issue_intake import intake_config, register_issue_intake
+            intake = intake_config(embed.get("guardrail_policy"))
+            if intake and getattr(cli, "connections", None) is not None:
+                register_issue_intake(
+                    tool_registry, cli.connections, intake,
+                    app_id=app_id, integration_id=embed.get("integration_id"),
+                    session_key=str(embed.get("end_user") or ""),
+                    site=str(embed.get("site") or ""))
+        except Exception as e:
+            logger.warning("embed issue intake skipped: %s", e)
     elif persona:
         allowed = persona.get("allowed_tools") or []
         try:
