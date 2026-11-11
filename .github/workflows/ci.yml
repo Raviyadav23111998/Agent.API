@@ -1,0 +1,91 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [ "main", "uat", "sit" ]
+  pull_request:
+    branches: [ "main", "uat", "sit" ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: false
+        default: 'main'
+
+jobs:
+  build-and-deploy:
+    name: Python Deploy
+    runs-on: self-hosted
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Agent.Core
+        uses: actions/checkout@v4
+        with:
+          repository: Raviyadav23111998/Agent.Core
+          token: ${{ secrets.PAT_TOKEN }}
+          ref: ${{ github.ref_name }}
+          path: core
+
+      - name: Deploy to Production
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        run: |
+          rsync -az --delete \
+            --exclude '__pycache__' \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude 'core/' \
+            ./ root@${DEPLOY_HOST}:/var/www/ai.storeglance.com/api/
+          rsync -az --delete \
+            --exclude '__pycache__' \
+            --exclude '.git' \
+            --exclude '.ag_data' \
+            --exclude '*.db' \
+            --exclude '*.db-wal' \
+            --exclude '*.db-shm' \
+            ./core/ root@${DEPLOY_HOST}:/var/www/ai.storeglance.com/api/core/
+          ssh root@${DEPLOY_HOST} "systemctl restart agent-api.service && systemctl restart agent-gateway.service"
+          echo "✅ Deployed to PRODUCTION (ai.storeglance.com)"
+
+      - name: Deploy to UAT
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/uat'
+        run: |
+          rsync -az --delete \
+            --exclude '__pycache__' \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude 'core/' \
+            ./ root@${DEPLOY_HOST}:/var/www/uat-ai.storeglance.com/api/
+          rsync -az --delete \
+            --exclude '__pycache__' \
+            --exclude '.git' \
+            --exclude '.ag_data' \
+            --exclude '*.db' \
+            --exclude '*.db-wal' \
+            --exclude '*.db-shm' \
+            ./core/ root@${DEPLOY_HOST}:/var/www/uat-ai.storeglance.com/api/core/
+          ssh root@${DEPLOY_HOST} "systemctl restart uat-agent-api.service && systemctl restart uat-agent-gateway.service"
+          echo "✅ Deployed to UAT (uat-ai.storeglance.com)"
+
+      - name: Deploy to SIT
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/sit'
+        run: |
+          rsync -az --delete \
+            --exclude '__pycache__' \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude 'core/' \
+            ./ root@${DEPLOY_HOST}:/var/www/sit-ai.storeglance.com/api/
+          rsync -az --delete \
+            --exclude '__pycache__' \
+            --exclude '.git' \
+            --exclude '.ag_data' \
+            --exclude '*.db' \
+            --exclude '*.db-wal' \
+            --exclude '*.db-shm' \
+            ./core/ root@${DEPLOY_HOST}:/var/www/sit-ai.storeglance.com/api/core/
+          ssh root@${DEPLOY_HOST} "systemctl restart sit-agent-api.service && systemctl restart sit-agent-gateway.service"
+          echo "✅ Deployed to SIT (sit-ai.storeglance.com)"

@@ -1,0 +1,25 @@
+# Prometheus scrape config for the Antigravity Agent.
+# Lives at /opt/monitoring/prometheus.yml on the VPS (added to the Grafana PLG stack).
+# Agents run on the host (systemd, uvicorn --host 0.0.0.0); Prometheus runs in the
+# monitoring docker network and reaches them via host.docker.internal:host-gateway.
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: storeglance
+    server: vps
+
+scrape_configs:
+  - job_name: agent_api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:8100']
+        labels: { environment: prod, app: agent, component: api }
+      - targets: ['host.docker.internal:8101']
+        labels: { environment: uat, app: agent, component: api }
+      - targets: ['host.docker.internal:8102']
+        labels: { environment: sit, app: agent, component: api }
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMSystem UAT — Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .navbar h1 { color: white; font-size: 20px; font-weight: 700; }
+        .navbar a {
+            color: rgba(255,255,255,0.7); text-decoration: none;
+            font-size: 14px; padding: 8px 16px; border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .navbar a:hover, .navbar a.active {
+            color: white; background: rgba(255,255,255,0.1);
+        }
+        .container { max-width: 1200px; margin: 32px auto; padding: 0 24px; }
+        .card {
+            background: white; border-radius: 12px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .card h2 { font-size: 18px; margin-bottom: 12px; color: #1a1a2e; }
+        .card p { color: #666; line-height: 1.6; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat .value { font-size: 28px; font-weight: 700; color: #6D28D9; }
+        .stat .label { color: #888; font-size: 13px; margin-top: 4px; }
+        .banner {
+            background: linear-gradient(135deg, #6D28D9, #4c1d95);
+            color: white; border-radius: 12px; padding: 32px;
+            margin-bottom: 24px;
+        }
+        .banner h2 { font-size: 24px; margin-bottom: 8px; }
+        .banner p { opacity: 0.85; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>⚡ SMSystem UAT</h1>
+        <a href="/dashboard" class="active">Dashboard</a>
+        <a href="/fleet">Fleet</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/docs">Documentation</a>
+        <a href="/settings">Settings</a>
+    </nav>
+
+    <div class="container">
+        <div class="banner">
+            <h2>Welcome back, Demo! 👋</h2>
+            <p>Your fleet is running smoothly. 3 deliveries completed today.</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><div class="value">47</div><div class="label">Active Vehicles</div></div>
+            <div class="stat"><div class="value">12</div><div class="label">Drivers Online</div></div>
+            <div class="stat"><div class="value">98.5%</div><div class="label">Fleet Uptime</div></div>
+            <div class="stat"><div class="value">₹4.2L</div><div class="label">Revenue Today</div></div>
+        </div>
+
+        <div class="card">
+            <h2>Recent Activity</h2>
+            <p>Vehicle #VH-2204 completed delivery at 12:45 PM</p>
+            <p>Driver Rajesh started route RO-445 at 12:30 PM</p>
+            <p>Maintenance alert: Vehicle #VH-1102 oil change due</p>
+        </div>
+
+        <div class="card">
+            <h2>💡 Try the Chat Bot!</h2>
+            <p>Click the <strong>purple chat bubble</strong> in the bottom-right corner to talk to the AI-powered SMSystem Support Assistant. It's connected to the full Agentic AI system with 50+ tools!</p>
+            <p style="margin-top:8px">Try asking:</p>
+            <ul style="margin-left:24px; margin-top:8px; color:#555">
+                <li>"What are the pricing plans?"</li>
+                <li>"How do I add a new user?"</li>
+                <li>"GPS tracking is not updating, help!"</li>
+                <li>"What features does SMSystem have?"</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ═══ ONE LINE: Agent Chatbot Widget ═══ -->
+    <script src="http://localhost:8100/bot/widget.js" data-token="ag_bot_smsystem_uat_demo_token_2026"></script>
+</body>
+</html>
