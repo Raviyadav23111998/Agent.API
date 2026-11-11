@@ -84,6 +84,10 @@ SQL
     done
 fi
 
+# Sample apps from other products that ride along in the bootstrap snapshot.
+psql_app -q -f "$HERE/remove_demo_seed.sql" >/dev/null
+echo "seed      other-product sample apps removed"
+
 # ── 3. platform config (own DB is the control plane) ──────────────────────
 # Media paths always; the LLM defaults only on a fresh database — after that the
 # admin UI owns them and a re-run must never overwrite what was saved there.

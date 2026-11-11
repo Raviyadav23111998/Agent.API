@@ -40,7 +40,7 @@ router = APIRouter(prefix="/v1/admin/service-keys", tags=["Service Keys (Admin)"
 
 class ServiceKeyCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=200,
-                      description="Human label, e.g. 'PrepCrest tutor — prod'.")
+                      description="Human label, e.g. 'Support bot — prod'.")
     app_id: int = Field(..., alias="appId",
                         description="The application the key IS. Resolves the "
                                     "persona, knowledge scope and LLM profile.")

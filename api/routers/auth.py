@@ -37,7 +37,7 @@ def _get_auth_service(request: Request):
     "/Login",
     response_model=LoginResponse,
     summary="Login — authenticate user",
-    description="Identical to SMSystems /Login. Supports grant_type: client_credentials, refresh_token.",
+    description="Sign in. Supports grant_type: client_credentials, refresh_token.",
 )
 async def login(
     login_request: LoginRequest,
@@ -55,7 +55,7 @@ async def login(
 @router.get(
     "/Logout",
     summary="Logout — invalidate session",
-    description="Identical to SMSystems /Logout. Requires Bearer token.",
+    description="Sign out. Requires Bearer token.",
 )
 async def logout(
     request: Request,
@@ -72,7 +72,7 @@ async def logout(
     "/ChangePassword",
     response_model=ChangePasswordResponse,
     summary="Change password",
-    description="Identical to SMSystems /ChangePassword. Supports: ResetPassword (with JWT).",
+    description="Change or reset a password. Supports: ResetPassword (with JWT).",
 )
 async def change_password(
     change_request: ChangePasswordRequest,

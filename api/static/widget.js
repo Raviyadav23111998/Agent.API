@@ -1,5 +1,5 @@
 /**
- * Antigravity Chatbot Widget — Embeddable Chat Bubble
+ * Storeglance Agent Chatbot Widget — Embeddable Chat Bubble
  * ═══════════════════════════════════════════════════════
  * Drop-in chatbot widget for any website.
  *
@@ -57,7 +57,7 @@
   }
 
   if (!BOT_TOKEN) {
-    console.error('[Antigravity Bot] Missing data-token attribute');
+    console.error('[Storeglance Bot] Missing data-token attribute');
     return;
   }
 
@@ -313,7 +313,7 @@
         </button>
       </div>
     </div>
-    <div class="ag-powered">Powered by <a href="#">Antigravity</a></div>
+    <div class="ag-powered">Powered by <a href="https://storeglance.com" target="_blank" rel="noopener">Storeglance</a></div>
   `;
   container.appendChild(panel);
 
@@ -471,7 +471,7 @@
       processStream();
     })
     .catch(err => {
-      console.error('[Antigravity Bot]', err);
+      console.error('[Storeglance Bot]', err);
       removeThinking();
       addMessage('assistant', 'Sorry, I couldn\'t connect to the server. Please try again.');
       isSending = false;
@@ -621,7 +621,7 @@
       // The agent resumes after the decision; show the thinking indicator again.
       if (approved) addThinking();
     })
-    .catch(function (err) { console.error('[Antigravity Bot] approval failed', err); });
+    .catch(function (err) { console.error('[Storeglance Bot] approval failed', err); });
   }
 
   function escapeHtml(s) {
@@ -664,7 +664,7 @@
       }
     }
   })
-  .catch(err => console.warn('[Antigravity Bot] Could not load config:', err));
+  .catch(err => console.warn('[Storeglance Bot] Could not load config:', err));
 
   // ── Load Existing History ─────────────────────────────────────────
   fetch(API_BASE + '/v1/bot/history/' + getSessionId(), {

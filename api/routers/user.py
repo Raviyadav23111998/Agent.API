@@ -48,7 +48,7 @@ def _get_user_service(request: Request):
     "/v1/users/Validate/Email",
     response_model=ValidateResponse,
     summary="Validate email uniqueness",
-    description="≈ SMSystems User/Validate/Email",
+    description="Check whether an email address is already registered",
 )
 async def validate_email(
     email: str = Query(..., description="Email to validate"),
@@ -64,7 +64,7 @@ async def validate_email(
     "/v1/users/Validate/UserCode",
     response_model=ValidateResponse,
     summary="Validate user code uniqueness",
-    description="≈ SMSystems User/Validate/UserCode",
+    description="Check whether a user code is already taken",
 )
 async def validate_user_code(
     userCode: str = Query(..., description="User code to validate"),
@@ -81,7 +81,7 @@ async def validate_user_code(
     "/v1/users/ActiveSession",
     response_model=List[UserSessionResponse],
     summary="Get active sessions for current user",
-    description="≈ SMSystems User/ActiveSession",
+    description="Mark the user session active",
 )
 async def active_session(
     request: Request,
@@ -96,7 +96,7 @@ async def active_session(
     "/v1/users/InActiveSession",
     response_model=List[UserSessionResponse],
     summary="Get inactive sessions for current user",
-    description="≈ SMSystems User/InActiveSession",
+    description="Mark the user session inactive",
 )
 async def inactive_session(
     request: Request,
@@ -130,7 +130,7 @@ async def list_users(
     "/v1/users/ddl",
     response_model=List[UserSummary],
     summary="Users dropdown (search)",
-    description="≈ SMSystems GetUsersDDL",
+    description="Users for a dropdown list",
 )
 async def users_ddl(
     SearchText: Optional[str] = Query(None, description="Search by name"),
@@ -146,7 +146,7 @@ async def users_ddl(
     "/v1/users/by-ids",
     response_model=List[UserSummary],
     summary="Get users by comma-separated IDs",
-    description="≈ SMSystems GetUserByIDs",
+    description="Users by ID",
 )
 async def users_by_ids(
     UserIDs: str = Query(..., description="Comma-separated user IDs"),
@@ -189,7 +189,7 @@ async def get_user(
 @router.post(
     "/v1/users",
     summary="Create user",
-    description="≈ SMSystems AddUpdateUser (userId=null)",
+    description="Create a user",
 )
 async def create_user(
     user_request: UserRequest,
@@ -207,7 +207,7 @@ async def create_user(
 @router.put(
     "/v1/users/{user_id}",
     summary="Update user",
-    description="≈ SMSystems AddUpdateUser (userId=existing)",
+    description="Update a user",
 )
 async def update_user(
     user_id: int,

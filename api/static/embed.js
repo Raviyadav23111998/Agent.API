@@ -35,7 +35,7 @@
   })().replace(/\/$/, '');
 
   // Tenant routing: when embedded cross-site (host ≠ tenant), the Origin header
-  // is the HOST site's domain (e.g. fleet.storeglance.com), NOT the agent tenant's
+  // is the HOST site's domain (e.g. shop.example.com), NOT the agent tenant's
   // domain.  ?tenant= in the script src (or data-tenant attr) tells the API
   // which tenant DB to use.  Widget.js sends X-Tenant-Domain on HTTP calls; for
   // WebSocket (no custom headers from JS) we append ?tenantDomain= to the URL,

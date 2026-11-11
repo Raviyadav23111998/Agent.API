@@ -1,5 +1,5 @@
 --
--- Antigravity agent tenant BOOTSTRAP (no creds, no tenant data)
+-- Storeglance Agent tenant BOOTSTRAP (no creds, no tenant data)
 -- Source of truth: golden tenant prod_agent_tenant_2a5fe12b
 -- Contents: full ag_* schema (V034) + curated platform-default seed.
 -- Excludes: all credentials/secrets, all tenant-private runtime data,
@@ -1881,7 +1881,7 @@ CREATE TABLE ag_system.agent_personas (
 -- Name: COLUMN agent_personas.input_guardrail_prompt; Type: COMMENT; Schema: ag_system; Owner: -
 --
 
-COMMENT ON COLUMN ag_system.agent_personas.input_guardrail_prompt IS 'Hard security boundary injected into the LLM system prompt. E.g. "Only discuss Fleet Management."';
+COMMENT ON COLUMN ag_system.agent_personas.input_guardrail_prompt IS 'Hard security boundary injected into the LLM system prompt. E.g. "Only discuss order tracking."';
 
 
 --

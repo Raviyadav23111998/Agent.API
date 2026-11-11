@@ -28,7 +28,7 @@ VSIX_DIR = os.environ.get("AG_VSCODE_VSIX_DIR", "")
 
 MARKETPLACE_URL = os.environ.get(
     "AG_VSCODE_MARKETPLACE_URL",
-    "https://marketplace.visualstudio.com/items?itemName=storeglance.antigravity-agent",
+    "",  # set when the extension is listed on the Marketplace
 )
 
 _CANDIDATE_DIRS = [

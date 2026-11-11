@@ -272,18 +272,3 @@ async def serve_widget():
     )
 
 
-@router.get(
-    "/bot/demo",
-    summary="Demo page",
-    description="Demo page showing the chatbot widget in action.",
-    include_in_schema=False,
-)
-async def serve_demo():
-    import os
-    demo_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "static", "demo.html"
-    )
-    if not os.path.exists(demo_path):
-        raise HTTPException(status_code=404, detail="Demo page not found")
-    return FileResponse(demo_path, media_type="text/html")
